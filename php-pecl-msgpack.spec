@@ -17,6 +17,7 @@ BuildRequires:	%{php_name}-devel
 BuildRequires:	rpmbuild(macros) >= 1.666
 %if %{with tests}
 BuildRequires:	%{php_name}-cli
+BuildRequires:	%{php_name}-pcre
 BuildRequires:	%{php_name}-session
 BuildRequires:	%{php_name}-spl
 %endif
@@ -46,6 +47,7 @@ phpize
 # simple module load test
 %{__php} -n -q \
 	-d extension_dir=modules \
+	-d extension=%{php_extensiondir}/pcre.so \
 	-d extension=%{php_extensiondir}/spl.so \
 	-d extension=%{php_extensiondir}/session.so \
 	-d extension=%{modname}.so \
@@ -55,7 +57,7 @@ grep %{modname} modules.log
 export NO_INTERACTION=1 REPORT_EXIT_STATUS=1 MALLOC_CHECK_=2
 %{__make} test \
 	PHP_EXECUTABLE=%{__php} \
-	PHP_TEST_SHARED_SYSTEM_EXTENSIONS="spl session"
+	PHP_TEST_SHARED_SYSTEM_EXTENSIONS="pcre spl session"
 %endif
 
 %install
