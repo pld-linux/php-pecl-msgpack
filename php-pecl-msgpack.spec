@@ -6,12 +6,12 @@
 %define		modname	msgpack
 Summary:	PHP extension for interfacing with MessagePack
 Name:		%{php_name}-pecl-%{modname}
-Version:	0.5.5
+Version:	0.5.6
 Release:	1
 License:	PHP 3.01
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
-# Source0-md5:	adc8d9ea5088bdb83e7cc7c2f535d858
+# Source0-md5:	895b90dc4bfdf2c7575b166ca68cbfc5
 URL:		http://pecl.php.net/package/msgpack/
 BuildRequires:	%{php_name}-devel
 BuildRequires:	rpmbuild(macros) >= 1.666
