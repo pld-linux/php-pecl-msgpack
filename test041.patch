@@ -1,0 +1,50 @@
+From d8bcd355bb16d4ad8c86f06d79741f573eea4f44 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Elan=20Ruusam=C3=A4e?= <glen@delfi.ee>
+Date: Tue, 22 Nov 2016 21:57:46 +0200
+Subject: [PATCH] update tests/041; fixes #108
+
+- disable bin2hex - it's dumping internal memory?
+- -0.0 is -0.0 in my platform
+---
+ tests/041.phpt | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/tests/041.phpt b/tests/041.phpt
+index 6400fd9..0dcf5b0 100644
+--- a/tests/041.phpt
++++ b/tests/041.phpt
+@@ -10,7 +10,6 @@ function test($type, $variable) {
+     var_dump($variable);
+     var_dump($unserialized);
+ 
+-    echo bin2hex($serialized), PHP_EOL;
+     echo PHP_EOL;
+ }
+ 
+@@ -24,24 +23,19 @@ test('double -0.0:', -0.0);
+ double NaN:
+ float(NAN)
+ float(NAN)
+-cb7ff8000000000000
+ 
+ double Inf:
+ float(INF)
+ float(INF)
+-cb7ff0000000000000
+ 
+ double -Inf:
+ float(-INF)
+ float(-INF)
+-cbfff0000000000000
+ 
+ double 0.0:
+ float(0)
+ float(0)
+-cb0000000000000000
+ 
+ double -0.0:
+-float(0)
+-float(0)
+-cb0000000000000000
++float(-0)
++float(-0)

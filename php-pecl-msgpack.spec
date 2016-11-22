@@ -12,6 +12,7 @@ License:	PHP 3.01
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
 # Source0-md5:	4d1db4592ffa4101601aefc794191de5
+Patch0:		test041.patch
 URL:		http://pecl.php.net/package/msgpack/
 BuildRequires:	%{php_name}-devel
 BuildRequires:	rpmbuild(macros) >= 1.666
@@ -37,6 +38,7 @@ JSON. But unlike JSON, it is very fast and small.
 %prep
 %setup -qc
 mv %{modname}-%{version}/* .
+%patch0 -p1
 
 %build
 phpize
