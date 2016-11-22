@@ -36,6 +36,15 @@ MessagePack is a binary-based efficient object serialization library.
 It enables to exchange structured objects between many languages like
 JSON. But unlike JSON, it is very fast and small.
 
+%package devel
+Summary:	MessagePack developer files (header)
+Group:		Development/Libraries
+Requires:	%{php_name}-devel
+# does not require base
+
+%description devel
+These are the files needed to compile programs using MessagePack.
+
 %prep
 %setup -qc
 mv %{modname}-%{version}/* .
@@ -87,9 +96,6 @@ cat <<'EOF' > $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d/%{modname}.ini
 extension=%{modname}.so
 EOF
 
-# no -devel package yet
-%{__rm} $RPM_BUILD_ROOT%{_includedir}/php/ext/msgpack/php_msgpack.h
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -106,3 +112,7 @@ fi
 %doc CREDITS EXPERIMENTAL
 %config(noreplace) %verify(not md5 mtime size) %{php_sysconfdir}/conf.d/%{modname}.ini
 %attr(755,root,root) %{php_extensiondir}/%{modname}.so
+
+%files devel
+%defattr(644,root,root,755)
+%{_includedir}/php/ext/%{modname}
