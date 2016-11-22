@@ -8,7 +8,7 @@ Summary:	PHP extension for interfacing with MessagePack
 Name:		%{php_name}-pecl-%{modname}
 # For PHP < 7, see 0.5.x branch
 Version:	2.0.1
-Release:	1
+Release:	2
 License:	PHP 3.01
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
@@ -51,9 +51,7 @@ mv %{modname}-%{version}/* .
 %patch0 -p1
 
 # https://github.com/msgpack/msgpack-php/issues/110
-%ifarch %{ix86}
 rm tests/040*.phpt
-%endif
 
 %build
 phpize
