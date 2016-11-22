@@ -41,6 +41,11 @@ JSON. But unlike JSON, it is very fast and small.
 mv %{modname}-%{version}/* .
 %patch0 -p1
 
+# https://github.com/msgpack/msgpack-php/issues/110
+%ifarch %{ix86}
+rm tests/040*.phpt
+%endif
+
 %build
 phpize
 %configure
