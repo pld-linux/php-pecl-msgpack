@@ -7,13 +7,12 @@
 Summary:	PHP extension for interfacing with MessagePack
 Name:		%{php_name}-pecl-%{modname}
 # For PHP < 7, see 0.5.x branch
-Version:	2.0.1
-Release:	2
+Version:	2.0.2
+Release:	1
 License:	PHP 3.01
 Group:		Development/Languages/PHP
 Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
-# Source0-md5:	4d1db4592ffa4101601aefc794191de5
-Patch0:		test041.patch
+# Source0-md5:	02f7e109d438072c4b642b01cf78533e
 URL:		http://pecl.php.net/package/msgpack/
 BuildRequires:	%{php_name}-devel >= 4:7.0.0
 BuildRequires:	rpmbuild(macros) >= 1.666
@@ -48,7 +47,6 @@ These are the files needed to compile programs using MessagePack.
 %prep
 %setup -qc
 mv %{modname}-%{version}/* .
-%patch0 -p1
 
 # https://github.com/msgpack/msgpack-php/issues/110
 rm tests/040*.phpt
