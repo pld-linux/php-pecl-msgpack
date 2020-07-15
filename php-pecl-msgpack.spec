@@ -1,3 +1,5 @@
+# TODO
+#  - bundles msgpack headers to 3.2.0
 #
 # Conditional build:
 %bcond_without	tests		# build without tests
@@ -7,13 +9,13 @@
 Summary:	PHP extension for interfacing with MessagePack
 Name:		%{php_name}-pecl-%{modname}
 # For PHP < 7, see 0.5.x branch
-Version:	2.0.2
+Version:	2.1.0
 Release:	1
 License:	PHP 3.01
 Group:		Development/Languages/PHP
-Source0:	http://pecl.php.net/get/%{modname}-%{version}.tgz
-# Source0-md5:	02f7e109d438072c4b642b01cf78533e
-URL:		http://pecl.php.net/package/msgpack/
+Source0:	https://pecl.php.net/get/%{modname}-%{version}.tgz
+# Source0-md5:	901960fda542dec313ab4d89bd63d06d
+URL:		https://pecl.php.net/package/msgpack/
 BuildRequires:	%{php_name}-devel >= 4:7.0.0
 BuildRequires:	rpmbuild(macros) >= 1.666
 %if %{with tests}
