@@ -9,12 +9,14 @@
 Summary:	PHP extension for interfacing with MessagePack
 Name:		%{php_name}-pecl-%{modname}
 # For PHP < 7, see 0.5.x branch
-Version:	2.1.0
+Version:	3.0.1
 Release:	1
 License:	PHP 3.01
 Group:		Development/Languages/PHP
 Source0:	https://pecl.php.net/get/%{modname}-%{version}.tgz
-# Source0-md5:	901960fda542dec313ab4d89bd63d06d
+# Source0-md5:	d7cd8f5be5c30fe9a993d60fa985a7d8
+Patch0:		enum-unserialize-segfault.patch
+Patch1:		unserialize-crash-hardening.patch
 URL:		https://pecl.php.net/package/msgpack/
 BuildRequires:	%{php_name}-devel >= 4:7.0.0
 BuildRequires:	rpmbuild(macros) >= 1.666
@@ -49,8 +51,10 @@ These are the files needed to compile programs using MessagePack.
 %prep
 %setup -qc
 mv %{modname}-%{version}/* .
+%patch -P0 -p1
+%patch -P1 -p1
 
-# https://github.com/msgpack/msgpack-php/issues/110
+# https://github.com/msgpack/msgpack-php/issues/110 (these self-skip on php >= 7.1)
 rm tests/040*.phpt
 
 %build
@@ -62,8 +66,10 @@ phpize
 # simple module load test
 %{__php} -n -q \
 	-d extension_dir=modules \
+%if "%php_major_version.%php_minor_version" < "7.4"
 	-d extension=%{php_extensiondir}/pcre.so \
 	-d extension=%{php_extensiondir}/spl.so \
+%endif
 	-d extension=%{php_extensiondir}/session.so \
 	-d extension=%{modname}.so \
 	-m > modules.log
@@ -74,7 +80,11 @@ cat <<'EOF' > run-tests.sh
 export NO_INTERACTION=1 REPORT_EXIT_STATUS=1 MALLOC_CHECK_=2
 exec %{__make} test \
 	PHP_EXECUTABLE=%{__php} \
+%if "%php_major_version.%php_minor_version" >= "7.4"
+	PHP_TEST_SHARED_SYSTEM_EXTENSIONS="session" \
+%else
 	PHP_TEST_SHARED_SYSTEM_EXTENSIONS="pcre spl session" \
+%endif
 	RUN_TESTS_SETTINGS="-q $*"
 EOF
 chmod +x run-tests.sh
@@ -107,7 +117,7 @@ fi
 
 %files
 %defattr(644,root,root,755)
-%doc CREDITS EXPERIMENTAL
+%doc CREDITS README.md
 %config(noreplace) %verify(not md5 mtime size) %{php_sysconfdir}/conf.d/%{modname}.ini
 %attr(755,root,root) %{php_extensiondir}/%{modname}.so
 

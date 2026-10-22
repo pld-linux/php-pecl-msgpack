@@ -1,0 +1,182 @@
+Fix segmentation fault when unserializing a nonexistent or non-case enum member.
+msgpack_unserialize() dereferenced the result of zend_enum_get_case() without
+checking the case exists, crashing on crafted or stale session data.
+
+Upstream: https://github.com/msgpack/msgpack-php/commit/b6e1202d78
+Upstream: https://github.com/msgpack/msgpack-php/commit/26c8c704b3
+
+diff --git a/msgpack_unpack.c b/msgpack_unpack.c
+index 88387e5..df33d7b 100644
+--- a/msgpack_unpack.c
++++ b/msgpack_unpack.c
+@@ -712,6 +712,19 @@ int msgpack_unserialize_map_item(msgpack_unpack_data *unpack, zval **container,
+                         return 0;
+                     }
+ 
++                    /* found Enum does not contain specified case */
++                    zend_class_constant *constant = zend_hash_find_ptr(
++                        CE_CONSTANTS_TABLE(ce),
++                        Z_STR_P(val));
++                    if (constant == NULL || !(ZEND_CLASS_CONST_FLAGS(constant) & ZEND_CLASS_CONST_IS_CASE)) {
++                        MSGPACK_WARNING(
++                            "[msgpack] (%s) Enum case %s does not exist in Enum %s",
++                            __FUNCTION__, Z_STRVAL_P(val), ZSTR_VAL(ce->name));
++
++                        MSGPACK_UNSERIALIZE_FINISH_MAP_ITEM(unpack, key, val);
++                        return 0;
++                    }
++
+                     zend_object *enum_instance = zend_enum_get_case(ce, Z_STR_P(val));
+                     ZVAL_OBJ_COPY(*container, enum_instance);
+ #endif
+diff --git a/tests/issue186.1.phpt b/tests/issue186.1.phpt
+new file mode 100644
+index 0000000..d93f1dd
+--- /dev/null
++++ b/tests/issue186.1.phpt
+@@ -0,0 +1,28 @@
++--TEST--
++Issue #182 (unknown enum case)
++--SKIPIF--
++<?php
++if (!extension_loaded("msgpack")) {
++    exit('skip because msgpack extension is missing');
++}
++if (version_compare(PHP_VERSION, '8.1.0', '<')) {
++    exit('skip Enum tests in PHP older than 8.1.0');
++}
++?>
++--FILE--
++Test
++<?php
++enum TestEnum
++{
++    case A;
++}
++
++$data = file_get_contents(__DIR__.'/issue186.ser.txt');
++$unserilized = msgpack_unserialize($data);
++?>
++OK
++--EXPECTF--
++Test
++
++Warning: [msgpack] (msgpack_unserialize_map_item) Enum case B does not exist in Enum TestEnum in %s/issue186.1.php on line 9
++OK
+diff --git a/tests/issue186.2.phpt b/tests/issue186.2.phpt
+new file mode 100644
+index 0000000..3e02e51
+--- /dev/null
++++ b/tests/issue186.2.phpt
+@@ -0,0 +1,30 @@
++--TEST--
++Issue #182 (unknown enum case)
++--SKIPIF--
++<?php
++if (!extension_loaded("msgpack")) {
++    exit('skip because msgpack extension is missing');
++}
++if (version_compare(PHP_VERSION, '8.1.0', '<')) {
++    exit('skip Enum tests in PHP older than 8.1.0');
++}
++?>
++--FILE--
++Test
++<?php
++enum TestEnum
++{
++    case A;
++
++    public const B = 42;
++}
++
++$data = file_get_contents(__DIR__.'/issue186.ser.txt');
++$unserilized = msgpack_unserialize($data);
++?>
++OK
++--EXPECTF--
++Test
++
++Warning: [msgpack] (msgpack_unserialize_map_item) Enum case B does not exist in Enum TestEnum in %s/issue186.2.php on line 11
++OK
+diff --git a/tests/issue186.3.phpt b/tests/issue186.3.phpt
+new file mode 100644
+index 0000000..610d8c8
+--- /dev/null
++++ b/tests/issue186.3.phpt
+@@ -0,0 +1,34 @@
++--TEST--
++Issue #182 (unknown enum case)
++--SKIPIF--
++<?php
++if (!extension_loaded("msgpack")) {
++    exit('skip because msgpack extension is missing');
++}
++if (version_compare(PHP_VERSION, '8.1.0', '<')) {
++    exit('skip Enum tests in PHP older than 8.1.0');
++}
++?>
++--FILE--
++Test
++<?php
++enum AnotherEnum {
++    case C;
++}
++
++enum TestEnum
++{
++    case A;
++
++    public const B = AnotherEnum::C;
++}
++
++$data = file_get_contents(__DIR__.'/issue186.ser.txt');
++$unserilized = msgpack_unserialize($data);
++?>
++OK
++--EXPECTF--
++Test
++
++Warning: [msgpack] (msgpack_unserialize_map_item) Enum case B does not exist in Enum TestEnum in %s/issue186.3.php on line 15
++OK
+diff --git a/tests/issue186.4.phpt b/tests/issue186.4.phpt
+new file mode 100644
+index 0000000..caac4bd
+--- /dev/null
++++ b/tests/issue186.4.phpt
+@@ -0,0 +1,27 @@
++--TEST--
++Issue #182 (unknown enum case)
++--SKIPIF--
++<?php
++if (!extension_loaded("msgpack")) {
++    exit('skip because msgpack extension is missing');
++}
++if (version_compare(PHP_VERSION, '8.1.0', '<')) {
++    exit('skip Enum tests in PHP older than 8.1.0');
++}
++?>
++--FILE--
++Test
++<?php
++enum TestEnum: string
++{
++    case A = 'a';
++    case B = 'b';
++}
++
++$data = file_get_contents(__DIR__.'/issue186.ser.txt');
++$unserilized = msgpack_unserialize($data);
++?>
++OK
++--EXPECTF--
++Test
++OK
+diff --git a/tests/issue186.ser.txt b/tests/issue186.ser.txt
+new file mode 100644
+index 0000000..130b76a
+--- /dev/null
++++ b/tests/issue186.ser.txt
+@@ -0,0 +1 @@
++‚À¨TestEnum¡B
+\ No newline at end of file
