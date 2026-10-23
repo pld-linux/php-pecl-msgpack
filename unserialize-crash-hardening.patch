@@ -1,40 +1,8 @@
 Reject malformed unserialize input instead of crashing: a custom-object or enum
 record whose payload is not a string, and an object back-reference whose index is
 not an integer, were used without a type check; a back-reference that points at the
-container being built freed it before the copy. msgpack_unserialize() with a template
-dereferenced a null HashTable when data for an array/object property was a scalar or
-shorter than the template.
+container being built freed it before the copy.
 
-diff --git a/msgpack_convert.c b/msgpack_convert.c
-index 1f90ef4..3e4148c 100644
---- a/msgpack_convert.c
-+++ b/msgpack_convert.c
-@@ -27,6 +27,13 @@ static inline int msgpack_convert_long_to_properties(HashTable *ht, zval *object
-                                 HashTable *dataht;
-                                 dataht = HASH_OF(val);
- 
-+                                if (dataht == NULL) {
-+                                    MSGPACK_WARNING("[msgpack] (%s) "
-+                                            "data for an array property is not an array",
-+                                            __FUNCTION__);
-+                                    return FAILURE;
-+                                }
-+
-                                 if ((dataval = zend_hash_index_find(dataht, prop_key_index)) == NULL) {
-                                     MSGPACK_WARNING("[msgpack] (%s) "
-                                             "can't get data value by index",
-@@ -401,7 +408,10 @@ int msgpack_convert_object(zval *return_value, zval *tpl, zval *value) /* {{{ */
- 
-                 num_key = 0;
-                 ZEND_HASH_FOREACH_STR_KEY_VAL(ret, str_key, data) {
--                    aryval = zend_hash_index_find(ht, num_key);
-+                    if ((aryval = zend_hash_index_find(ht, num_key)) == NULL) {
-+                        MSGPACK_WARNING("[msgpack] (%s) can't get data value by index", __FUNCTION__);
-+                        return FAILURE;
-+                    }
- 
-                     if (data == NULL) {
-                         MSGPACK_WARNING("[msgpack] (%s) can't get data value by index", __FUNCTION__);
 diff --git a/msgpack_unpack.c b/msgpack_unpack.c
 index df33d7b..ad5bc0a 100644
 --- a/msgpack_unpack.c

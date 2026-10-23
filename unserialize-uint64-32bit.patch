@@ -1,0 +1,17 @@
+Fix uint64 unserialization of values in (ZEND_LONG_MAX, 2^52] on 32-bit (x32):
+1L is a 32-bit long there, so "1L<<52" overflows to 0 and the value is emitted
+as a numeric string instead of a double. The comparison is against a uint64_t.
+
+diff --git a/msgpack_unpack.c b/msgpack_unpack.c
+index ad5bc0a..74fe23c 100644
+--- a/msgpack_unpack.c
++++ b/msgpack_unpack.c
+@@ -427,7 +427,7 @@ int msgpack_unserialize_uint64(msgpack_unpack_data *unpack, uint64_t data, zval
+ 
+     if (data <= (uint64_t) ZEND_LONG_MAX) {
+         ZVAL_LONG(*obj, data);
+-    } else if (data <= 1L<<52) {
++    } else if (data <= 1ULL<<52) {
+         ZVAL_DOUBLE(*obj, data);
+     } else {
+         char buf[0x20] = {0}, *ptr = print_u64_to_buf(&buf[sizeof(buf)-1], data);
